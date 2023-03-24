@@ -1,18 +1,21 @@
-import { Sequelize } from "sequelize";
+import { Sequelize } from "sequelize-typescript";
+import dotenv from 'dotenv';
+dotenv.config();
 
 
-export const sequelizeInstance = new Sequelize( "ToDo", "root", "root", {
-    dialect: "postgres",
-    host: "localhost",
-    port: 5432,
-    //logging: false
+const sequelizeInstance: Sequelize = new Sequelize(process.env.DATABASE_NAME!, process.env.DATABASE_USERNAME!, process.env.DATABASE_PASSWORD!, {
+  dialect: "postgres",
+  host: process.env.DATABASE_HOST!,
+  port: Number(process.env.DATABASE_PORT!),
+  models: [__dirname + '/models'], //*.model.ts
+  // logging: false,
 });
 
 
 export default async function initDB(): Promise<void> {
     try {
-        await sequelizeInstance.authenticate(); //Авторизация нашей ORM в БД
-        await sequelizeInstance.sync(); //Синхронизация МОДЕЛЕЙ
+        await sequelizeInstance.authenticate();
+        await sequelizeInstance.sync();
         console.log("Sequelize was initialized");
     } catch (error) {
         console.log("Sequelize ERROR (initDB)", error);
