@@ -1,8 +1,9 @@
 { 
   "include": [ "./src" ],
-  "exclude": [ "./node_modules", "./dist", "env", "docker-compose.yaml" ],
+  "exclude": [ "./node_modules", "./dist", "docker-compose.yaml", ],
   "compilerOptions": {
     "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "target": "es2017",                                
     "resolveJsonModule": true,
     "module": "commonjs",                               
