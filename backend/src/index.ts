@@ -1,19 +1,26 @@
-import ToDo from './db/models/ToDo.models';
+import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import http from 'http';
+import ToDo from './db/models/ToDo.model';
 import cors from '@fastify/cors';
 import initDB from './db';
 import fastify from 'fastify';
-import { FastifyReply, FastifyRequest } from "fastify";
 
-const ServerPort: number = 4000;
-const app = fastify();
+
+const app: FastifyInstance = fastify<http.Server>();
 app.register(cors);
-initDB();
 
+// type CustomRequest = FastifyRequest<{
+//   Body: { test: boolean };
+// }>
 
 interface BodyType {
   title: string,
   description: string,
   isCompleted: string,
+}
+
+interface ParamsType {
+  id: number,
 }
 
 
@@ -26,107 +33,98 @@ app.post("/todos", async (req: FastifyRequest<{ Body: BodyType }>, res: FastifyR
     });
 
     res.send(result);
-    // return result;
   } catch (error) {
     console.log(error);
-    // res.type('application/json').code(500);
-    res.code(500);
-    return { message: "Not OK" };
+    res.code(500).send({ message: "Failed to create ToDo" });
   }
 })
 
-app.get("/todos", async (req: any, res: any) => {
+app.get("/todos", async (req: FastifyRequest, res: FastifyReply) => {
   try {
-    const result = await ToDo.findAll({
-      order: [ 
+    const result: ToDo[] = await ToDo.findAll({
+      order: [
         ['isCompleted', 'ASC'],
-        ['updatedAt', 'DESC'], 
+        ['updatedAt', 'DESC'],
       ]
     });
-    return { result };
+    res.send(result);
   } catch (error) {
     console.log(error);
-    res.type('application/json').code(500);
+    res.code(500).send({ message: "Failed to get all ToDo" });
   }
 })
 
-app.get("/todos/:id", async (req: any, res: any) => {
+app.get("/todos/:id", async (req: FastifyRequest<{ Params: ParamsType }>, res: FastifyReply) => {
   try {
-    const result = await ToDo.findByPk(req.params.id);
+    const result: ToDo | null = await ToDo.findByPk(req.params.id);
     if (!result) {
-      res.type('application/json').code(404);
-      return {
-        message: `Not found ${req.params.id}`,
-      }
+      res.code(404).send({ message: `Not found ${req.params.id}` });
     }
 
-    return { result };
+    res.send(result);
   } catch (error) {
     console.log(error);
-    res.type('application/json').code(500);
+    res.code(500).send({ message: `Failed to get ${req.params.id}` });
   }
 })
 
-app.patch("/todos/:id", async (req: any, res: any) => {
+app.patch("/todos/:id", async (req: FastifyRequest<{ Body: BodyType, Params: ParamsType }>, res: FastifyReply) => {
   try {
-    const ToDoFind = await ToDo.findByPk(req.params.id);
+    const ToDoFind: ToDo | null = await ToDo.findByPk(req.params.id);
     if (!ToDoFind) {
-      res.type('application/json').code(404);
-      return {
-        massage: `Not found ${req.params.id}`,
-      }
+      res.code(404).send({ massage: `Not found ${req.params.id}` });
+    } else {
+      await ToDoFind.update(
+        {
+          title: req.body.title,
+          description: req.body.description,
+          isCompleted: req.body.isCompleted,
+        });
     }
 
-    await ToDoFind.update(
-      {
-        title: req.body.title,
-        description: req.body.description,
-        isCompleted: req.body.isCompleted,
-      });
-
-    const result = await ToDo.findByPk(req.params.id);
-    return { result };
+    const result: ToDo | null = await ToDo.findByPk(req.params.id);
+    res.send(result);
   } catch (error) {
     console.log(error);
-    res.type('application/json').code(500);
+    res.code(500).send({ message: `Failed to patch ${req.params.id}` });
   }
 })
 
-app.delete("/todos", async (req: any, res: any) => {
+app.delete("/todos", async (req: FastifyRequest, res: FastifyReply) => {
   try {
     await ToDo.destroy({
       truncate: true
     });
-    
-    return { massage: "Ok" };
+
+    res.send({ massage: "All ToDo are destroyed" })
   } catch (error) {
     console.log(error);
-    res.type('application/json').code(500);
+    res.code(500).send({ massage: "Failed to destroy all ToDo" });
   }
 })
 
-app.delete("/todos/:id", async (req: any, res: any) => {
+app.delete("/todos/:id", async (req: FastifyRequest<{ Params: ParamsType }>, res: FastifyReply) => {
   try {
-    const result = await ToDo.findByPk(req.params.id);
+    const result: ToDo | null = await ToDo.findByPk(req.params.id);
     if (!result) {
-      res.type('application/json').code(404);
-      return {
-        massage: `Not found ${req.params.id}`,
-      }
+      res.code(404).send({ massage: `Not found ${req.params.id}` });
+    } else {
+      await result.destroy();
+      res.send({ massage: `Destroy ${req.params.id}` })
     }
-
-    await result.destroy();
-    return { massage: "Ok" };
   } catch (error) {
     console.log(error);
-    res.type('application/json').code(500);
+    res.code(500).send({ message: `Failed to destroy ${req.params.id}` });
   }
 })
 
-app.listen({ port: ServerPort }, (err, address) => {
+
+
+app.listen({ port: Number(process.env.SERVER_PORT!) }, (err: Error | null, address: string) => {
   if (err) {
     console.error(err);
     process.exit(1);
   }
-  console.log(`Server listening at ${address}`);
+  initDB();
+  console.log(`Server listening at ${address}!`);
 });

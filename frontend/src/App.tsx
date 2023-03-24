@@ -37,7 +37,7 @@ function App() {
   async function getToDoList() {
     await axios.get(pathDefault)
       .then((res) => {
-        setToDoList(res.data.result);
+        setToDoList(res.data);
       }).catch((error) => {
         console.log(error);
       })
