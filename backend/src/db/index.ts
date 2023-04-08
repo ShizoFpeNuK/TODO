@@ -1,13 +1,12 @@
 import { Sequelize } from "sequelize-typescript";
-import dotenv from 'dotenv';
-dotenv.config();
+import ToDo from "./models/todo.model";
 
 
 const sequelizeInstance: Sequelize = new Sequelize(process.env.DATABASE_NAME!, process.env.DATABASE_USERNAME!, process.env.DATABASE_PASSWORD!, {
   dialect: "postgres",
   host: process.env.DATABASE_HOST!,
   port: Number(process.env.DATABASE_PORT!),
-  models: [__dirname + '/models'], //*.model.ts
+  models: [ ToDo ],
   // logging: false,
 });
 

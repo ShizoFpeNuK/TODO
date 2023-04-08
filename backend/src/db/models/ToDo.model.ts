@@ -1,7 +1,7 @@
-import { Table, Column, Model, DataType, Default } from 'sequelize-typescript'
-import { PrimaryKey } from "sequelize-typescript/dist/model/column/primary-key/primary-key";
-import { AllowNull } from "sequelize-typescript/dist/model/column/column-options/allow-null";
 import { NotEmpty } from "sequelize-typescript/dist/validation/not-empty";
+import { AllowNull } from "sequelize-typescript/dist/model/column/column-options/allow-null";
+import { PrimaryKey } from "sequelize-typescript/dist/model/column/primary-key/primary-key";
+import { Table, Column, Model, DataType, Default } from 'sequelize-typescript'
 
 
 interface IToDo {
