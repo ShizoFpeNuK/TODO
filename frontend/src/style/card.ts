@@ -1,11 +1,11 @@
 export const CardTitle = {
-    backgroundColor: "#680BAB",
+    backgroundColor: "#640CAB",
     color: "white",
     fontWeight: "600",
     fontSize: "18px",
 };
 
 export const CardBody = {
-    backgroundColor: "#5B2680",
+    backgroundColor: "#846FD7",
     color: "white",
 };

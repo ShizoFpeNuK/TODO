@@ -1,16 +1,15 @@
 import './App.css';
 import 'antd';
-import axios from 'axios';
-import { CheckOutlined, CloseOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
-import { Row, Col, Card, Button, Space, Pagination } from 'antd';
-import { CardTitle, CardBody } from './style/card';
-import { ButtonView } from './style/button';
 import { IToDo } from './options/models';
+import { ButtonView } from './style/button';
+import { CardTitle, CardBody } from './style/card';
 import { useEffect, useState } from 'react';
 import { FormAddToDo, FormUpdateToDo } from './components/FormToDo';
+import { Row, Col, Card, Button, Space, Pagination } from 'antd';
+import { CheckOutlined, CloseOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
+import ToDoServices from './services/ToDo.service';
 
 function App() {
-  const pathDefault: string = 'http://localhost:4000/todos';
   const [ToDoList, setToDoList] = useState<Array<IToDo>>([]);
   const [title, setTitle] = useState<string>("");
   const [description, setDescription] = useState<string>("");
@@ -20,6 +19,7 @@ function App() {
   const pageSize: number = 5;
   let oldTitle: string;
   let oldDescription: string;
+
 
   function openWindowCreate() {
     setIsOpenWindowCreate(true);
@@ -35,26 +35,16 @@ function App() {
   }
 
   async function getToDoList() {
-    await axios.get(pathDefault)
-      .then((res) => {
-        setToDoList(res.data);
-      }).catch((error) => {
-        console.log(error);
-      })
+    const ToDos: IToDo[] = await ToDoServices.getAll();
+    setToDoList(ToDos);
   }
 
   async function createToDo() {
     if (title && description) {
-      await axios.post(pathDefault, {
-        title: title,
-        description: description,
-      }).then((res) => {
-        getToDoList();
-        setTitle("");
-        setDescription("");
-      }).catch((error) => {
-        console.log(error);
-      })
+      await ToDoServices.create(title, description);
+      getToDoList();
+      setTitle("");
+      setDescription("");
     }
   }
 
@@ -68,67 +58,50 @@ function App() {
       if (!description) {
         oldDescription = ToDoList.filter(ToDo => ToDo.id === ToDoID)[0].description;
       }
-      await axios.patch(pathDefault + '/' + ToDoID, {
-        title: oldTitle,
-        description: oldDescription,
-      }).then((res) => {
-        getToDoList();
-        setTitle("");
-        setDescription("");
-        setToDoID("");
-        setIsOpenWindowCreate(true);
-      }).catch((error) => {
-        console.log(error);
-      })
+
+      await ToDoServices.update(ToDoID, oldTitle, oldDescription);
+      getToDoList();
+      setTitle("");
+      setDescription("");
+      setToDoID("");
+      setIsOpenWindowCreate(true);
     }
   }
 
   async function deleteToDoList() {
-    await axios.delete(pathDefault)
-      .then((res) => {
-        getToDoList();
-        setTitle("");
-        setDescription("");
-        setToDoID("");
-        setIsOpenWindowCreate(true);
-      }).catch((error) => {
-        console.log(error);
-      })
+    await ToDoServices.deleteAll();
+    getToDoList();
+    setTitle("");
+    setDescription("");
+    setToDoID("");
+    setIsOpenWindowCreate(true);
   }
 
   async function deleteToDo(ID: string) {
-    axios.delete(pathDefault + '/' + ID)
-      .then((res) => {
-        getToDoList();
-        setTitle("");
-        setDescription("");
-        setToDoID("");
-        setIsOpenWindowCreate(true);
-      }).catch((error) => {
-        console.log(error);
-      })
+    await ToDoServices.deleteOne(ID);
+    getToDoList();
+    setTitle("");
+    setDescription("");
+    setToDoID("");
+    setIsOpenWindowCreate(true);
   }
 
   async function completedToDo(ID: string, completed: boolean) {
-    await axios.patch(pathDefault + '/' + ID, {
-      isCompleted: !completed,
-    })
-      .then((res) => {
-        getToDoList();
-      }).catch((error) => {
-        console.log(error);
-      })
+    await ToDoServices.isCompleted(ID, completed);
+    getToDoList();
   }
+
 
   useEffect(() => {
     getToDoList();
   }, [])
 
+
   return (
     <div className="App">
       <Row gutter={40}>
         <Col span={16}>
-          {ToDoList.filter((ToDo, index) => {
+          {ToDoList.filter((ToDo: IToDo, index: number) => {
             return index + 1 <= page * pageSize && index >= (page - 1) * pageSize
           }).map(ToDo =>
             <Card title={ToDo.title} key={ToDo.id} headStyle={CardTitle} bodyStyle={CardBody} style={{ marginBottom: "20px" }}

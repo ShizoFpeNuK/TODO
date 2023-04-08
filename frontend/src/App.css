@@ -4,11 +4,12 @@
 }
 
 .ant-card-actions {
-  background-color: #926CD6 !important;
+  /* background-color: #926CD6 !important; */
+  background-color: #846FD7 !important;
 }
 
 .ant-card {
-  background-color: #5B2680;
+  background-color: #846FD7;
 }
 
 .icon {
@@ -37,6 +38,9 @@
   height: 100%;
 }
 
+:where(.css-dev-only-do-not-override-10ed4xt).ant-btn-default {
+  width: 100%;
+}
 
 .anticon {
   margin: 12px;
