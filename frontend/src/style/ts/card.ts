@@ -1,3 +1,4 @@
+
 export const CardTitle = {
     backgroundColor: "#640CAB",
     color: "white",
