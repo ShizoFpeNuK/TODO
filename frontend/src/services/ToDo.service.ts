@@ -1,5 +1,6 @@
 import axios from "axios";
-import { IToDo } from "../options/models";
+import { IToDo } from "../options/models/todo.model";
+
 
 export default class ToDoServices {
   static pathDefault: string = 'http://localhost:4000/todos';
@@ -11,10 +12,12 @@ export default class ToDoServices {
   }
 
   static async create(title: string, description: string) {
-    await axios.post(this.pathDefault, {
-      title: title,
-      description: description,
-    });
+    if (title) {
+      await axios.post(this.pathDefault, {
+        title: title,
+        description: description,
+      });
+    }
   }
 
   static async update(id: string, title: string, description: string) {
