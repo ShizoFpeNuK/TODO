@@ -1,99 +1,31 @@
-import './App.css';
-import 'antd';
-import { IToDo } from './options/models';
-import { ButtonView } from './style/button';
-import { CardTitle, CardBody } from './style/card';
+import './style/css/App.css';
+import { IToDo } from './options/models/todo.model';
+import { observer } from 'mobx-react';
+import { ToDoCard } from './components/ToDoCard';
+import { ButtonView } from './style/ts/button';
+import { CardTitle, CardBody } from './style/ts/card';
 import { useEffect, useState } from 'react';
-import { FormAddToDo, FormUpdateToDo } from './components/FormToDo';
+import { FormAddToDo, FormUpdateToDo } from './components/ToDoForm';
 import { Row, Col, Card, Button, Space, Pagination } from 'antd';
-import { CheckOutlined, CloseOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
-import ToDoServices from './services/ToDo.service';
+import todo from "./store/ToDoStoreClass";
 
-function App() {
-  const [ToDoList, setToDoList] = useState<Array<IToDo>>([]);
-  const [title, setTitle] = useState<string>("");
-  const [description, setDescription] = useState<string>("");
+
+const App = observer(() => {
   const [isOpenWindowCreate, setIsOpenWindowCreate] = useState<boolean>(true);
-  const [ToDoID, setToDoID] = useState<string>("");
   const [page, setPage] = useState<number>(1);
   const pageSize: number = 5;
-  let oldTitle: string;
-  let oldDescription: string;
-
 
   function openWindowCreate() {
     setIsOpenWindowCreate(true);
-    setTitle("");
-    setDescription("");
   }
 
-  function openWindowUpdate(ToDoID: string) {
+  function openWindowUpdate(id: string) {
     setIsOpenWindowCreate(false);
-    setTitle(ToDoList.filter(ToDo => ToDo.id === ToDoID)[0].title);
-    setDescription(ToDoList.filter(ToDo => ToDo.id === ToDoID)[0].description);
-    setToDoID(ToDoID);
+    todo.setId(id);
   }
-
-  async function getToDoList() {
-    const ToDos: IToDo[] = await ToDoServices.getAll();
-    setToDoList(ToDos);
-  }
-
-  async function createToDo() {
-    if (title && description) {
-      await ToDoServices.create(title, description);
-      getToDoList();
-      setTitle("");
-      setDescription("");
-    }
-  }
-
-  async function updateToDo(ToDoID: string) {
-    if (title || description) {
-      oldTitle = title;
-      oldDescription = description;
-      if (!title) {
-        oldTitle = ToDoList.filter(ToDo => ToDo.id === ToDoID)[0].title;
-      }
-      if (!description) {
-        oldDescription = ToDoList.filter(ToDo => ToDo.id === ToDoID)[0].description;
-      }
-
-      await ToDoServices.update(ToDoID, oldTitle, oldDescription);
-      getToDoList();
-      setTitle("");
-      setDescription("");
-      setToDoID("");
-      setIsOpenWindowCreate(true);
-    }
-  }
-
-  async function deleteToDoList() {
-    await ToDoServices.deleteAll();
-    getToDoList();
-    setTitle("");
-    setDescription("");
-    setToDoID("");
-    setIsOpenWindowCreate(true);
-  }
-
-  async function deleteToDo(ID: string) {
-    await ToDoServices.deleteOne(ID);
-    getToDoList();
-    setTitle("");
-    setDescription("");
-    setToDoID("");
-    setIsOpenWindowCreate(true);
-  }
-
-  async function completedToDo(ID: string, completed: boolean) {
-    await ToDoServices.isCompleted(ID, completed);
-    getToDoList();
-  }
-
 
   useEffect(() => {
-    getToDoList();
+    todo.getToDoList();
   }, [])
 
 
@@ -101,44 +33,31 @@ function App() {
     <div className="App">
       <Row gutter={40}>
         <Col span={16}>
-          {ToDoList.filter((ToDo: IToDo, index: number) => {
+          {todo.ToDoList.filter((ToDo: IToDo, index: number) => {
             return index + 1 <= page * pageSize && index >= (page - 1) * pageSize
-          }).map(ToDo =>
-            <Card title={ToDo.title} key={ToDo.id} headStyle={CardTitle} bodyStyle={CardBody} style={{ marginBottom: "20px" }}
-              extra={[
-                <div onClick={() => completedToDo(ToDo.id, ToDo.isCompleted)} className='icon icon--green' key={ToDo.id}>
-                  {ToDo.isCompleted && <CheckOutlined key="completed" />}
-                </div>,
-                <div onClick={() => completedToDo(ToDo.id, ToDo.isCompleted)} className='icon icon--red' key={ToDo.updatedAt}>
-                  {!ToDo.isCompleted && <CloseOutlined key="noCompleted" />}
-                </div>
-              ]} actions={[
-                <div onClick={() => deleteToDo(ToDo.id)} className='icon'><DeleteOutlined key="delete" /></div>,
-                <div onClick={() => openWindowUpdate(ToDo.id)} className='icon'><EditOutlined key="edit" /></div>,
-              ]}>
-              {ToDo.description}
-            </Card>
+          }).map((ToDo: IToDo) =>
+            <ToDoCard ToDo={ToDo} key={ToDo.id} openWindowUpdate={openWindowUpdate} openWindowCreate={openWindowCreate} />
           )}
-          <Pagination
-            current={page}
-            pageSize={pageSize}
-            onChange={setPage}
-            total={ToDoList.length || 0}
-          />
+          {todo.ToDoList.length
+            ? <Pagination
+              current={page}
+              pageSize={pageSize}
+              onChange={setPage}
+              total={todo.ToDoList.length || 0}
+              />
+            : <div style={{ fontSize: "24px", fontWeight: "400" }}>У вас нет дел. Можете расслабиться!</div>
+          }
         </Col>
         <Col span={8}>
-          {isOpenWindowCreate
-            ? <FormAddToDo todoNew={{ title: title, description: description, createToDo: createToDo, setTitle: setTitle, setDescription: setDescription }} />
-            : <FormUpdateToDo todoChange={{ title: title, description: description, id: ToDoID, updateToDo: updateToDo, setTitle: setTitle, setDescription: setDescription }} />
-          }
+          {isOpenWindowCreate ? <FormAddToDo /> : <FormUpdateToDo id={todo.id} closeWindowUpdate={setIsOpenWindowCreate} />}
           <Row>
             <Col span={8}></Col>
             <Col span={8}>
               <Card title="Панель управления" headStyle={CardTitle} bodyStyle={CardBody}>
                 <Space>
                   <Space.Compact direction="vertical">
-                    <Button onClick={getToDoList} style={ButtonView}>Получить все</Button>
-                    <Button onClick={deleteToDoList} style={ButtonView}>Удалить все</Button>
+                    <Button onClick={todo.getToDoList} style={ButtonView}>Получить все</Button>
+                    <Button onClick={() => { todo.deleteToDoList(); openWindowCreate() }} style={ButtonView}>Удалить все</Button>
                     <Button onClick={openWindowCreate} style={ButtonView}>Создать</Button>
                   </Space.Compact>
                 </Space>
@@ -150,7 +69,7 @@ function App() {
       </Row>
     </div>
   );
-}
+})
 
 
 export default App;
