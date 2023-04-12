@@ -5,6 +5,7 @@ import { ToDoCard } from './components/ToDoCard';
 import { ButtonView } from './style/ts/button';
 import { CardTitle, CardBody } from './style/ts/card';
 import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { FormAddToDo, FormUpdateToDo } from './components/ToDoForm';
 import { Row, Col, Card, Button, Space, Pagination } from 'antd';
 import todo from "./store/ToDoStoreClass";
@@ -33,18 +34,32 @@ const App = observer(() => {
     <div className="App">
       <Row gutter={40}>
         <Col span={16}>
-          {todo.ToDoList.filter((ToDo: IToDo, index: number) => {
-            return index + 1 <= page * pageSize && index >= (page - 1) * pageSize
-          }).map((ToDo: IToDo) =>
-            <ToDoCard ToDo={ToDo} key={ToDo.id} openWindowUpdate={openWindowUpdate} openWindowCreate={openWindowCreate} />
-          )}
+          <AnimatePresence mode="popLayout">
+            {todo.ToDoList.filter((ToDo: IToDo, index: number) => {
+              return index + 1 <= page * pageSize && index >= (page - 1) * pageSize;
+            }).map((ToDo: IToDo) =>
+              <motion.div key={ToDo.id}
+                layout
+                initial={{ opacity: 0, scale: 0.7 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{
+                  duration: 1,
+                  delay: 0.2,
+                  ease: [0, 0.71, 0.2, 1.01]
+                }}
+                exit={{ scale: 0.8, opacity: 0 }}
+              >
+                <ToDoCard ToDo={ToDo} key={ToDo.id} openWindowUpdate={openWindowUpdate} openWindowCreate={openWindowCreate} />
+              </motion.div>
+            )}
+          </AnimatePresence>
           {todo.ToDoList.length
             ? <Pagination
               current={page}
               pageSize={pageSize}
               onChange={setPage}
               total={todo.ToDoList.length || 0}
-              />
+            />
             : <div style={{ fontSize: "24px", fontWeight: "400" }}>У вас нет дел. Можете расслабиться!</div>
           }
         </Col>
