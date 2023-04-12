@@ -54,8 +54,8 @@ class ToDoClass {
   setId(id: string) {
     this.id = id;
   }
-
 }
 
+const todo = new ToDoClass();
 
-export default new ToDoClass();
+export default todo;

@@ -3,6 +3,10 @@
   margin: 50px 100px;
 }
 
+.todo_card {
+  text-align: left;
+}
+
 .ant-card-actions {
   background-color: #846FD7 !important;
 }
@@ -33,7 +37,7 @@
   margin: 0;
 }
 
-:where(.css-dev-only-do-not-override-10ed4xt).ant-card .ant-card-actions>li >span {
+:where(.css-dev-only-do-not-override-10ed4xt).ant-card .ant-card-actions>li>span {
   height: 100%;
 }
 
